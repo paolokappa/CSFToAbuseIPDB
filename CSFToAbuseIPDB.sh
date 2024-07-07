@@ -1,8 +1,7 @@
 #!/usr/bin/sh
-# Written by Paolo Caparrelli for GOLINE SA
 
 # Set your AbuseIPDB API key here.
-key="YOUR_API_KEY_HERE"
+key="YOUR_ABUSEIPDB_API_KEY"
 
 # Function to determine the appropriate AbuseIPDB category based on the trigger
 determine_category() {
@@ -33,13 +32,23 @@ echo "Trigger: $trigger"
 category=$(determine_category $trigger)
 echo "Category: $category"
 
+# Extract all unique IP addresses from the logs in case of LF_DISTATTACK
+if [ "$trigger" = "LF_DISTATTACK" ]; then
+    ips=$(echo "$logs" | grep -oP '(?<=rhost=)[\d\.]+' | sort -u)
+else
+    ips=$ip_address
+fi
+
 # Concatenate details to form a useful AbuseIPDB comment.
 comment="${message}; Ports: ${ports}; Direction: ${direction}; Trigger: ${trigger}; Logs: ${logs}"
 
-# Send the data to AbuseIPDB
-curl https://api.abuseipdb.com/api/v2/report \
-  --data-urlencode "ip=$ip_address" \
-  -d categories=$category \
-  --data-urlencode "comment=$comment" \
-  -H "Key: $key" \
-  -H "Accept: application/json"
+# Loop through all unique IPs and send the data to AbuseIPDB
+for ip in $ips; do
+    echo "Reporting IP: $ip"
+    curl https://api.abuseipdb.com/api/v2/report \
+      --data-urlencode "ip=$ip" \
+      -d categories=$category \
+      --data-urlencode "comment=$comment" \
+      -H "Key: $key" \
+      -H "Accept: application/json"
+done
