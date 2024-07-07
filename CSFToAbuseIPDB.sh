@@ -1,7 +1,7 @@
 #!/usr/bin/sh
 
 # Set your AbuseIPDB API key here.
-key="YOUR_ABUSEIPDB_API_KEY"
+key="YOUR_AbuseIPDB_API_KEY"
 
 # Function to determine the appropriate AbuseIPDB category based on the trigger
 determine_category() {
@@ -39,12 +39,12 @@ else
     ips=$ip_address
 fi
 
-# Concatenate details to form a useful AbuseIPDB comment.
-comment="${message}; Ports: ${ports}; Direction: ${direction}; Trigger: ${trigger}; Logs: ${logs}"
-
 # Loop through all unique IPs and send the data to AbuseIPDB
 for ip in $ips; do
-    echo "Reporting IP: $ip"
+    # Extract relevant logs for the current IP
+    ip_logs=$(echo "$logs" | grep "$ip")
+    comment="${message}; Ports: ${ports}; Direction: ${direction}; Trigger: ${trigger}; Logs: ${ip_logs}"
+    echo "Reporting IP: $ip with comment: $comment"
     curl https://api.abuseipdb.com/api/v2/report \
       --data-urlencode "ip=$ip" \
       -d categories=$category \
