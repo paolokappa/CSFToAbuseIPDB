@@ -1,5 +1,6 @@
 #!/usr/bin/sh
 # Written by Paolo Caparrelli for GOLINE SA
+
 # Set your AbuseIPDB API key here.
 key="YOUR_API_KEY_HERE"
 
