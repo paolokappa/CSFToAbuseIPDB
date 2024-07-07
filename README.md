@@ -1,6 +1,3 @@
-# CSFToAbuseIPDB
-This script is designed for ConfigServer Security &amp; Firewall (CSF). It reports suspicious IP addresses to AbuseIPDB based on triggers detected by CSF
-
 # CSF to AbuseIPDB Reporting Script
 
 This script is designed to work with ConfigServer Security & Firewall (CSF) to report suspicious IP addresses to AbuseIPDB. It maps specific CSF triggers to the corresponding AbuseIPDB categories, constructs a detailed comment about the incident, and sends the report to AbuseIPDB using the provided API key.
