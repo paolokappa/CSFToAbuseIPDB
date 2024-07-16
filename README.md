@@ -16,18 +16,44 @@ This script is designed to work with ConfigServer Security & Firewall (CSF) to r
 
    ```sh
    determine_category() {
-       local trigger=$1
-       case "$trigger" in
-           LF_SSHD) echo "22,18" ;; # SSH
-           LF_TRIGGER) echo "22,18" ;; # SSH Brute-Force
-           LF_DISTATTACK) echo "4" ;; # DDoS attack
-           LF_DISTFTP) echo "5" ;; # FTP Brute-Force
-           LF_WEBMIN_EMAIL_ALERT) echo "15,21" ;; # Webmin attack
-           LF_EMAIL_ALERT) echo "11,18" ;; # Email attack
-           LF_DISTSMTP) echo "18,11" ;; # SMTP attack
-           LF_DISTMYSQL) echo "16,15" ;; # MySQL attack
-           *) echo "18" ;; # Default to SSH if unknown
-       esac
+    local trigger=$1
+    local comment=$2
+    case "$trigger" in
+        LF_SSHD) echo "22,18" ;; # SSH
+        LF_TRIGGER) 
+            if echo "$comment" | grep -q "(ftpd)"; then
+                echo "5"
+            elif echo "$comment" | grep -q "(sshd)"; then
+                echo "22,18"
+            elif echo "$comment" | grep -q "(smtp)"; then
+                echo "18,11"
+            elif echo "$comment" | grep -q "(httpd)"; then
+                echo "21"
+            elif echo "$comment" | grep -q "(pop3d)"; then
+                echo "18,11"
+            elif echo "$comment" | grep -q "(imapd)"; then
+                echo "18,11"
+            elif echo "$comment" | grep -q "(mysql)"; then
+                echo "16,15"
+            elif echo "$comment" | grep -q "(named)"; then
+                echo "1,2"
+            elif echo "$comment" | grep -q "(exim)"; then
+                echo "11,18"
+            elif echo "$comment" | grep -q "(dovecot)"; then
+                echo "18,11"
+            else
+                echo "18" # Default category for LF_TRIGGER
+            fi
+            ;;
+        LF_DISTATTACK) echo "4,22" ;; # DDoS attack
+        LF_DISTFTP) echo "5" ;; # FTP Brute-Force
+        LF_WEBMIN_EMAIL_ALERT) echo "15,21" ;; # Webmin attack
+        LF_EMAIL_ALERT) echo "11,18" ;; # Email attack
+        LF_DISTSMTP) echo "18,11" ;; # SMTP attack
+        LF_DISTMYSQL) echo "16,15" ;; # MySQL attack
+        LF_EXIMSYNTAX) echo "11,18" ;; # Exim syntax error
+        *) echo "18" ;; # Default to SSH if unknown
+    esac
    }
    ```
 
