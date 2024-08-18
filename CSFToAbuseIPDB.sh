@@ -46,6 +46,22 @@ determine_category() {
     esac
 }
 
+# Function to convert category codes to names
+convert_category_to_names() {
+    local category=$1
+    category=$(echo $category | sed 's/22/SSH/g')
+    category=$(echo $category | sed 's/18/Brute-Force/g')
+    category=$(echo $category | sed 's/5/FTP/g')
+    category=$(echo $category | sed 's/11/Email/g')
+    category=$(echo $category | sed 's/21/Web Attack/g')
+    category=$(echo $category | sed 's/16/SQL Injection/g')
+    category=$(echo $category | sed 's/15/Port Scan/g')
+    category=$(echo $category | sed 's/4/DDoS/g')
+    category=$(echo $category | sed 's/1/DNS Compromise/g')
+    category=$(echo $category | sed 's/2/DNS Poisoning/g')
+    echo $category
+}
+
 # Function to log operations to the log file
 log_operation() {
     local message=$1
@@ -61,12 +77,9 @@ logs=$7
 trigger=$8
 
 # Debug output for tracing
-echo "Trigger: $trigger"
 category=$(determine_category $trigger "$message")
-echo "Category: $category"
-
-# Log the trigger and category determination
-log_operation "Trigger: $trigger, Category: $category"
+category_names=$(convert_category_to_names $category)
+log_operation "Trigger: $trigger, Category: $category_names"
 
 # Extract all unique IP addresses from the logs in case of LF_DISTATTACK
 if [ "$trigger" = "LF_DISTATTACK" ]; then
@@ -91,7 +104,6 @@ for ip in $ips; do
         comment="${message}; IP: ${ip}; Ports: ${ports}; Direction: ${direction}; Trigger: ${trigger}; Logs: $(echo "$ip_logs" | tr '\n' ' ')"
     fi
     
-    echo "Reporting IP: $ip with comment: $comment"
     log_operation "Reporting IP: $ip with comment: $comment"
     
     response=$(curl -s https://api.abuseipdb.com/api/v2/report \
@@ -101,5 +113,13 @@ for ip in $ips; do
       -H "Key: $key" \
       -H "Accept: application/json")
     
+    # Parse and log the response
+    abuse_confidence_score=$(echo $response | grep -oP '(?<="abuseConfidenceScore":)\d+')
+    log_operation "AbuseIPDB Categories: $category_names"
+    if [ -n "$abuse_confidence_score" ]; then
+        log_operation "AbuseIPDB Confidence Score: $abuse_confidence_score"
+    else
+        log_operation "AbuseIPDB Confidence Score: Not Available"
+    fi
     log_operation "Response: $response"
 done
